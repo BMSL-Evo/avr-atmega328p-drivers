@@ -1,21 +1,27 @@
 MCU = atmega328p
 F_CPU = 16000000UL
+
 CC = avr-gcc
+OBJCOPY = avr-objcopy
 
-CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall
-LDFLAGS = -mmcu=$(MCU)
+APP ?= blink_led
 
-SRC = applications/blink_led/main.c
+CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall \
+         -I drivers/gpio/inc
 
-TARGET = build/main
+SRC = applications/$(APP)/main.c\
+      drivers/gpio/src/gpio_driver.c
+
+TARGET = build/$(APP)/main
 
 all: $(TARGET).hex
 
 $(TARGET).elf: $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET).elf $(LDFLAGS)
+	mkdir -p $(dir $(TARGET))
+	$(CC) $(CFLAGS) $(SRC) -o $(TARGET).elf
 
 $(TARGET).hex: $(TARGET).elf
-	avr-objcopy -O ihex -R .eeprom $(TARGET).elf $(TARGET).hex
+	$(OBJCOPY) -O ihex -R .eeprom $(TARGET).elf $(TARGET).hex
 
 clean:
 	rm -f build/*.elf build/*.hex
